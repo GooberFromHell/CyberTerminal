@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <script src="https://code.jquery.com/jquery-3.7.1.js"></script>
+    <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.terminal/2.37.2/js/jquery.terminal.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/jquery.terminal/2.37.2/css/jquery.terminal.css">
+    <link href="https://code.jquery.com/ui/1.13.2/themes/ui-darkness/jquery-ui.css">
+    <link href="https://raw.githubusercontent.com/bryfry/chronos_trigger/master/font-awesome.css">
+    <link href="https://raw.githubusercontent.com/GooberFromHell/term/master/hack.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+    <div id="rework-container">
+        <div id="vmware-interface"></div>
+        <div id="terminal">
+            <div id="divider" class="ui-resizable-handle ui-resizable-n"><span class="resizable-handle"></span></div>
+            <div id="terminal-tools">
+                <div id='checkboxes'>
+                </div>
+                <div id="action-btns">
+                </div>
+                <div id="selections"></div>
+
+            </div>
+            <div id='terminal-console'>
+            </div>
+        </div>
+    </div>
+    <div id="upload-overlay" class="d-none">
+        <div id='dropArea'
+            style="color:inherit;border:1px dashed rgba(211, 211, 211, 0.514);background-color:rgba(211, 211, 211, 0.233); padding: 5px;">
+            <div>
+                <span class='fa fa-cloud-upload' </span>
+                    <span>Dropping file here or</span>
+                    <div>
+                        <input id='upload-file' type="file">
+                        <a>select one</a>
+                    </div>
+            </div>
+        </div>
+        <a id='close-over' class="icon-btn"><i class="fa fa-close"></i></a>
+    </div>
+    <script src="./terminal-ui-test.js"></script>
+</body>
+
+</html>
