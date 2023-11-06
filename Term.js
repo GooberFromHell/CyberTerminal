@@ -3,6 +3,8 @@
 // @version      4.2
 // @author       @LordGoober
 // @match        https://rcs00-portal.pcte.mil/
+// @updateURL    https://raw.githubusercontent.com/GooberFromHell/CyberTerminal/main/Term.js
+// @downloadURL  https://raw.githubusercontent.com/GooberFromHell/CyberTerminal/main/Term.js
 // @require      https://raw.githubusercontent.com/GooberFromHell/CyberTerminal/main/js/jquery.js
 // @require      https://raw.githubusercontent.com/GooberFromHell/CyberTerminal/main/js/jquery.terminal.js
 // @require      https://raw.githubusercontent.com/GooberFromHell/CyberTerminal/main/js/jquery-ui.js
