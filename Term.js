@@ -9,7 +9,7 @@
 // @grant        GM_getResourceText
 // @run-at       document-start
 // @require      https://raw.githubusercontent.com/GooberFromHell/CyberTerminal/main/js/jquery.js
-// @require      https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.js
+// @require      https://raw.githubusercontent.com/GooberFromHell/CyberTerminal/main/js/jquery-ui.js
 // @require      https://raw.githubusercontent.com/GooberFromHell/CyberTerminal/main/js/jquery.terminal.js
 // @resource     jqueryui_css https://raw.githubusercontent.com/GooberFromHell/CyberTerminal/main/css/jquery-ui/jquery-ui.css
 // @resource     jquerys_css https://raw.githubusercontent.com/GooberFromHell/CyberTerminal/main/css/jquery-ui/jquery-ui.structure.css
@@ -17,9 +17,8 @@
 // @resource     fontawesome_css https://raw.githubusercontent.com/GooberFromHell/CyberTerminal/main/css/font-awesome/font-awesome.css
 // @resource     hack_css https://raw.githubusercontent.com/GooberFromHell/CyberTerminal/main/css/hack/hack.css
 // @resource     terminal_css https://raw.githubusercontent.com/GooberFromHell/CyberTerminal/main/css/jquery-terminal/jquery.terminal.css
-// @require      file://D:/Code/js/CYBERTerminal/Term.js
+// @require      file://C:Users/LordGoober/Desktop/Code/Term/Term Dev.js
 // ==/UserScript==
-
 
 const html = `
 <div id="rework-container">
@@ -28,10 +27,10 @@ const html = `
         <div id="terminal-tools">
             <div id='checkbox-tools'>
             </div>
+            <div id="vm-name"></div>
             <div id="button-tools">
             </div>
             <div id="select-tools"></div>
-
         </div>
         <div id='terminal-console'>
         </div>
@@ -74,9 +73,6 @@ function init(data) {
         }
     }
 
-
-
-
     const rebase_css = {
         height: '100vh',
         width: '100vw',
@@ -108,13 +104,14 @@ function init(data) {
         fontFamily: 'Hack, "Segoe UI"',
         color: 'white',
         fontSize: '10px',
+        backgroundColor: '#080808',
     }
 
     const vmInterfaceStyles = {
         flex: '0 0 auto',
         maxWidth: '100%',
         height: '100%',
-        backgroundColor: '#080808', // Changed property name to camelCase
+        backgroundColor: '#080808',
     }
 
     const terminalContainerStyles = {
@@ -127,7 +124,6 @@ function init(data) {
         borderTop: '4px solid #404040',
         boxShadow: 'inset 0px 0px 10px 2px rgba(0,0,0,0.75)',
         backgroundColor: '--terminal-background-color', // Added a custom property
-
     }
 
     const terminalToolsStyles = {
@@ -166,12 +162,15 @@ function init(data) {
     }
 
     const inputStyles = {
+
         checkbox: {
+            backgroundColor: '#222222',
             width: '15px',
             height: '15px',
             margin: '5px',
             padding: '0px',
             borderRadius: '5px',
+            accentColor: '#222222',
         },
         button: {
             ...style.flex,
@@ -179,13 +178,30 @@ function init(data) {
             borderRadius: '50%',
             justifyContent: 'center',
             backgroundColor: 'transparent',
-            border: 'none',
-            height: '26px',
-            width: '26px',
+            borderColor: '#717171',
+            height: '30px',
+            width: '30px',
             transition: 'all 0.2s ease-in-out',
+            backgroundColor: '#222222',
         },
         select: {
             minWidth: '200px',
+            height: '30px',
+            borderRadius: '3px',
+            border: 'none',
+            backgroundColor: '#222222',
+        },
+        newButton: {
+            ...style.flex,
+            ...style.flexCenter,
+            position: 'absolute',
+            borderRadius: '50%',
+            zIndex: 999,
+            height: '30px',
+            width: '30px',
+            bottom: '10px',
+            right: '10px',
+            backgroundColor: 'rgba(0,0,0,.35)'
         }
     }
 
@@ -199,6 +215,7 @@ function init(data) {
         color: 'rgba(211, 211, 211, 0.514)',
         backgroundColor: '#242424ad',
     }
+
     class IconCheckbox extends HTMLInputElement {
         constructor(props) {
             super()
@@ -216,6 +233,7 @@ function init(data) {
             this.addEventListener('click', clicked)
         }
     }
+
     class IconCheckboxContainer extends HTMLDivElement {
         constructor(props) {
             super(props)
@@ -237,16 +255,21 @@ function init(data) {
             //TODO init tooltips..
         }
     }
+
     class IconButton extends HTMLAnchorElement {
         constructor(props) {
             super()
             this.id = `${props.id}-btn`
 
             const icon = document.createElement('i')
+            $(icon).css({
+                color: "#1e87f0",
+                fontSize: '16px'
+            })
             icon.classList = props.icon
             this.append(icon)
 
-            $(this).css(inputStyles.button)
+            props.style ? $(this).css(props.style) : $(this).css(inputStyles.button)
 
             this.setAttribute('data-tooltip', props.tooltip)
             this.setAttribute('data-type', props.type)
@@ -260,6 +283,7 @@ function init(data) {
             this.addEventListener('click', clicked)
         }
     }
+
     class IconSelection extends HTMLSelectElement {
         constructor(props) {
             super()
@@ -273,7 +297,7 @@ function init(data) {
                     console.error(e)
                 }
             }
-            this.addEventListener('click', clicked)
+            this.addEventListener('change', clicked)
 
             $(this).css(inputStyles.select)
             if (props.preload) {
@@ -291,159 +315,155 @@ function init(data) {
     customElements.define('icon-selection', IconSelection, { extends: 'select' })
     customElements.define('icon-checkbox', IconCheckbox, { extends: 'input' })
 
+
     const toggles = {
         closings: false,
         newline: true,
-        adjust_resolution: false,
+        adjust_resolution: true,
+    }
+
+    function toggleInterface() {
+        console.log('interface toggle clicked')
+        if ($('#content-wrapper').css('display') == 'none') {
+            $('#content-wrapper').show()
+            $("#vmware-interface").appendTo('.interface:first-child')
+            $('#rework-container').hide()
+            $('#new-btn').show()
+        } else {
+            $('#rework-container').show()
+            $("#vmware-interface").prependTo('#rework-container')
+            $('#content-wrapper').hide()
+            $('#new-btn').hide()
+        }
     }
 
     //
     // INTERFACE ELEMENTS
     //
-    const interfaceElements = {
-        open_terminal: {
-            type: 'button',
-            tooltip: "Open Terminal",
-            classs: "icon-btn",
-            icon: "fa fa-terminal",
-            onClick: function () {
-                openTerminal('windows')
-            },
+    const interfaceElements = [{
+        id: "open-terminal",
+        type: 'button',
+        data: { tooltip: "Open Terminal", },
+        classs: "icon-btn",
+        icon: "fa fa-terminal",
+        onClick: function () {
+            wmks.wmks._keyboardManager.sendVScanKey([91])
+            // openTerminal('windows')
         },
-        cad: {
-            type: 'button',
+    }, {
+        id: "cad",
+        type: 'button',
+        data: {
             tooltip: "Send Ctrl + Alt + Del to the VM.",
-            classs: "icon-btn",
-            icon: "fa fa-keyboard-o",
-            onClick: function () {
-                wmks.wmks.sendCAD()
-            }
         },
-        popout: {
-            type: 'button',
-            tooltip: "Popout terminal into seperate window. (Experimental)",
-            classs: "icon-btn",
-            icon: "fa fa-eject",
-            onClick: () => { },
-        },
-        fullscreen: {
-            type: 'button',
-            tooltip: "Fullscreen",
-            classs: "icon-btn",
-            icon: "fa fa-tv",
-            onClick: function () {
-                fullscreen()
-            },
-        },
-        old: {
-            type: 'button',
-            tooltip: "Switch back to old interface.",
-            classs: "icon-btn",
-            icon: "fa fa-trash-o",
-            onClick: function (e) {
-                toggleInterface()
-            },
-        },
-        closings: {
-            type: 'checkbox',
-            tooltip: "Check for closing partners for all brackets, paraenes, quotes, and back ticks (`). Prints what is missing, if any are found. Will not trip-up on escaped characters.",
-            checked: toggles.closings,
-            onClick: (e) => {
-                toggles.closings = e.target.checked
-            }
-        },
-        newline: {
-            type: 'checkbox',
-            tooltip: "Submit command to VM rather than just paste to VM.",
-            onClick: (e) => {
-                toggles.newline = e.target.checked
-            },
-            checked: toggles.newline
-        },
-        adjust_resolution: {
-            type: 'checkbox',
-            tooltip: "When the VM Console is resized the VM with adjust its resolution to match the new console side. Reccommened use with rescale.",
-            checked: toggles.adjust_resolution,
-            onClick: (e) => {
-                toggles.adjust_resolution = e.target.checked
-                wmks.wmks._setOption('changeResolution', e.target.checked)
-                wmks.wmks._setOption('rescale', e.target.checked)
-                setMargins()
-            },
-        },
-        vm: {
-            type: 'select',
-            tooltip: "Select VM to connect to.",
-            preload: (e) => {
-                // Get list of VMs for connected range
-                let host = window.location.host
-                let id = window.location.href.split("/")[8]
-                $.get(`https://${host}/api/range-server/events/${id}/range-info/vm-names-consoles`)
-                    .then((data) => {
-                        $.each(data.vms, (idx, value) => {
-                            let option = $(`<option key=${value.key.index} data-repetitionGroup="${value.key.repetitionGroup}" value="${value.val}">${value.val}</option>`)
-                            window.location.href.split("vmName=")[1] == value.val ? option.prop('selected', true) : null
-                            $('#vm-select').append(option)
-                        })
-
-                    })
-            },
-            onClick: (e) => {
-                if ($('#mainCanvas').length <= 0) return
-                $('#vmware-interface').remove()
-                let host = window.location.host
-                let urlParts = window.location.href.split("/")
-                let selected = $(e.currentTarget).find(':selected')
-                let key = selected.attr('key')
-                let repetitionGroup = selected.attr('data-repetitionGroup')
-                let vmName = selected.val()
-                let connectUrl = `https://${host}/#/app/range/console/live-action/${urlParts[8]}/${urlParts[9]}/${repetitionGroup}/${key}?vmName=${vmName}`
-                window.location.href = connectUrl
-
-                setTimeout(() => {
-                    $('#vmware-interface').prependTo('#rework-container')
-                }, 1000)
-            }
-        },
-        [Symbol.iterator]: function () {
-            const properties = Object.keys(this)
-            let index = 0
-            return {
-                next: () => {
-                    if (index < properties.length) {
-                        const key = properties[index]
-                        const value = this[key]
-                        index++
-
-                        const getInput = (props) => {
-                            switch (props.type) {
-                                case 'button':
-                                    return new IconButton(props)
-                                case 'select':
-                                    return new IconSelection(props)
-                                case 'checkbox':
-                                    return new IconCheckboxContainer(props)
-                            }
-                        }
-
-                        return { index: index, value: getInput({ id: key, ...value }) }
-                    } else {
-                        return { done: true }
-                    }
-                },
-            }
-        },
-    }
-    const staticButtons = {
-        new: {
-            tooltip: "Switch back to old interface.",
-            class: "icon-btn",
-            icon: "fa fa-chevron-circle-left",
-            action: function (e) {
-                this._showNewInterface()
-            },
+        classs: "icon-btn",
+        icon: "fa fa-keyboard-o",
+        onClick: function () {
+            wmks.wmks._keyboardManager.sendVScanKey([29, 56, 83])
         }
-    }
+    },
+    {
+        id: "popout",
+        type: 'button',
+        data: { tooltip: "Popout terminal into seperate window. (Experimental)", },
+        classs: "icon-btn",
+        icon: "fa fa-eject",
+        onClick: () => { },
+    },
+    {
+        id: "fullscreen",
+        type: 'button',
+        data: { tooltip: "Fullscreen", },
+        classs: "icon-btn",
+        icon: "fa fa-tv",
+        onClick: function () {
+            console.log('fullscreen clicked')
+            // fullscreen()
+        },
+    }, {
+        id: "old",
+        type: 'button',
+        data: { tooltip: "Switch back to old interface.", },
+        classs: "icon-btn",
+        icon: "fa fa-trash-o",
+        onClick: toggleInterface
+    }, {
+        id: "closings",
+        type: 'checkbox',
+        data: { tooltip: "Check for closing partners for all brackets, paraenes, quotes, and back ticks (`). Prints what is missing, if any are found. Will not trip-up on escaped characters.", },
+        checked: toggles.closings,
+        onClick: (e) => {
+            toggles.closings = e.target.checked
+        }
+    }, {
+        id: "newline",
+        type: 'checkbox',
+        data: { tooltip: "Submit command to VM rather than just paste to VM.", },
+        onClick: (e) => {
+            toggles.newline = e.target.checked
+        },
+        checked: toggles.newline
+    }, {
+        id: "adjust-resolution",
+        type: 'checkbox',
+        data: { tooltip: "When the VM Console is resized the VM with adjust its resolution to match the new console side. Reccommened use with rescale.", },
+        checked: toggles.adjust_resolution,
+        onClick: (e) => {
+            toggles.adjust_resolution = e.target.checked
+            wmks.wmks._setOption('changeResolution', e.target.checked)
+            wmks.wmks._setOption('rescale', e.target.checked)
+            setMargins()
+        },
+    }, {
+        id: 'vm',
+        type: 'select',
+        data: { tooltip: "Select VM to connect to.", },
+        preload: (e) => {
+            // Get list of VMs for connected range
+            let host = window.location.host
+            let id = window.location.href.split("/")[8]
+            $.get(`https://${host}/api/range-server/events/${id}/range-info/vm-names-consoles`)
+                .then((data) => {
+                    $.each(data.vms, (idx, value) => {
+                        let option = $(`<option key=${value.key.index} data-repetitionGroup="${value.key.repetitionGroup}" value="${value.val}">${value.val}</option>`)
+                        window.location.href.split("vmName=")[1] == value.val ? option.prop('selected', true) : null
+                        $('#vm-select').append(option)
+                    })
+
+                })
+        },
+        onClick: (e) => {
+            if ($('#mainCanvas').length <= 0) return
+            $('#vmware-interface').remove()
+            let host = window.location.host
+            let urlParts = window.location.href.split("/")
+            let selected = $(e.currentTarget).find(':selected')
+            let key = selected.attr('key')
+            let repetitionGroup = selected.attr('data-repetitionGroup')
+            let vmName = selected.val()
+            let connectUrl = `https://${host}/#/app/range/console/live-action/${urlParts[8]}/${urlParts[9]}/${repetitionGroup}/${key}?vmName=${vmName}`
+            window.location.href = connectUrl
+
+            setTimeout(() => {
+                $('#vmware-interface').prependTo('#rework-container')
+            }, 1000)
+        }
+    },
+    ]
+
+
+    const staticButtons = [{
+        parent: 'body',
+        style: inputStyles.newButton,
+        id: "new",
+        type: 'button',
+        data: { tooltip: "Switch back to old interface.", },
+        classs: "icon-btn",
+        icon: "fa fa-chevron-circle-left",
+        onClick: toggleInterface,
+        onLoad: $(this).hide
+
+    }]
 
     //
     // TERMINAL SETTINGS
@@ -531,42 +551,71 @@ function init(data) {
     })
 
     // Create interface elements and functionallity
-    for (const element of interfaceElements) {
-        if (element) {
-            $(`#${element.dataset['type']}-tools`).append(element)
+    $(interfaceElements).each((idx, props) => {
+        if (props) {
+            let element
+            console.info(`Item inserted into #${props.type}-tools`)
+            switch (props.type) {
+                case 'button':
+                    element = new IconButton(props)
+                    $(`#${props.type}-tools`).append(element)
+
+
+                    break
+                case 'select':
+                    element = new IconSelection(props)
+                    $(`#${props.type}-tools`).append(element)
+                    break
+                case 'checkbox':
+                    element = new IconCheckboxContainer(props)
+                    break
+            }
+            $(`#${props.type}-tools`).append(element)
+
         }
-    }
+    })
+
+    // Add static buttons
+    $(staticButtons).each((idx, props) => {
+        if (props) {
+            console.info(`Item inserted into #${props.type}-tools`)
+            let element = new IconButton(props)
+            $(props.parent).append(element)
+            props.onLoad.bind($(element))()
+        }
+    })
     // Make the VMWare console resizable
     setTimeout(() => {
         $("#vmware-interface").resizable({
             handles: 's',
             ghost: true,
             stop: function (event, ui) {
-                if (toggles.adjust_resolution) {
+                if (!toggles.adjust_resolution) {
                     wmks.wmks._setOption('changeResolution', true)
                     wmks.wmks._setOption('rescale', true)
                     $('#mainCanvas').css('height', `${$('#vmware-interface').height()}px !important`)
                 }
-                setMargins()
+                wmks.
+                    setMargins()
             },
             // minHeight: $('#divider').outerHeight()
         })
     }, 1000)
+}
 
-    function setMargins() {
-        function getMargin() {
-            // get scale factor with regex, becasue jquery dosen't support 'scale' css property
+function setMargins() {
+    function getMargin() {
+        // get scale factor with regex, becasue jquery dosen't support 'scale' css property
 
-            if ($('#mainCanvas').css('transform') == 'none') return
-            let scaleFactor = parseFloat($('#mainCanvas').css('transform').match(/matrix\((-?\d*\.?\d+),\s*0,\s*0,\s*(-?\d*\.?\d+),\s*0,\s*0\)/)[1])
-            let mainCanvasWidth = $('#mainCanvas').width() * scaleFactor
-            let screenWidth = $('#vmware-interface').width()
-            return ((screenWidth - mainCanvasWidth) / 2)
-        }
-
-        $('#mainCanvas').css('margin-left', getMargin)
-        $('#mainCanvas').css('margin-right', getMargin)
+        if ($('#mainCanvas').css('transform') == 'none') return
+        let scaleFactor = parseFloat($('#mainCanvas').css('transform').match(/matrix\((-?\d*\.?\d+),\s*0,\s*0,\s*(-?\d*\.?\d+),\s*0,\s*0\)/)[1])
+        let mainCanvasWidth = $('#mainCanvas').width() * scaleFactor
+        let screenWidth = $('#vmware-interface').width()
+        return ((screenWidth - mainCanvasWidth) / 2)
     }
+
+    $('#mainCanvas').css('margin-left', getMargin)
+    $('#mainCanvas').css('margin-right', getMargin)
 }
 
 function getWMKS() {
