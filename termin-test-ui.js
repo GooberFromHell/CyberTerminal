@@ -517,7 +517,7 @@ function init(data) {
         })
 
     // Store the WMKS API object globally
-    var wmks = data
+    wmks = data
 
     // Append skeleton html for the new interface
     $('body').append(html)
@@ -531,7 +531,6 @@ function init(data) {
     $("#vmware-interface").resizable({
         handles: 's',
         ghost: true,
-        // minHeight: $('#divider').outerHeight()
     })
 
     // Create interface elements and functionallity
