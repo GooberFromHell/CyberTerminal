@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         PCTE Term UI Test
-// @version      4.x
+// @version      4.2
 // @author       @LordGoober
 // @match        http://127.0.0.1:5500/index.html
 // @require      https://code.jquery.com/jquery-3.7.1.js
