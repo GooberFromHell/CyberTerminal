@@ -1,22 +1,8 @@
 // ==UserScript==
-// @name         PCTE Term UI Test
+// @name         CyberTerminal
 // @version      4.2
 // @author       @LordGoober
-// @match        http://127.0.0.1:5500/index.html
-// @require      https://code.jquery.com/jquery-3.7.1.js
-// @require      https://code.jquery.com/ui/1.13.2/jquery-ui.js
-// @require      https://cdnjs.cloudflare.com/ajax/libs/jquery.terminal/2.37.2/js/jquery.terminal.js
-// @resource     jqterminal_css https://cdnjs.cloudflare.com/ajax/libs/jquery.terminal/2.37.2/css/jquery.terminal.css
-// @resource     jquery_ui_css https://code.jquery.com/ui/1.13.2/themes/ui-darkness/jquery-ui.css
-// @resource     fontawesome_css https://raw.githubusercontent.com/bryfry/chronos_trigger/master/font-awesome.css
-// @resource     hack_font https://raw.githubusercontent.com/GooberFromHell/term/master/hack.css
-// @grant        GM_addStyle
-// @grant        GM_getResourceText
-// @run-at       document-end
-// @sandbox      MAIN_PAGE
-// @require      file://D:/Code/js/Term 4.0/terminal-ui-test.js
-// ==/UserScript==
-
+// @match        https://rcs00-portal.pcte.mil/
 // @require      https://raw.githubusercontent.com/GooberFromHell/CyberTerminal/main/js/jquery.js
 // @require      https://raw.githubusercontent.com/GooberFromHell/CyberTerminal/main/js/jquery.terminal.js
 // @require      https://raw.githubusercontent.com/GooberFromHell/CyberTerminal/main/js/jquery-ui.js
@@ -26,20 +12,26 @@
 // @resources    fontawesome_css https://raw.githubusercontent.com/GooberFromHell/CyberTerminal/main/css/font-awesome/font-awesome.css
 // @resources    hack_css https://raw.githubusercontent.com/GooberFromHell/CyberTerminal/main/css/hack/hack.css
 // @resources    terminal_css https://raw.githubusercontent.com/GooberFromHell/CyberTerminal/main/css/jquery-terminal/jquery.terminal.css
+// @grant        GM_addStyle
+// @grant        GM_getResourceText
+// @run-at       document-start
+// @sandbox      MAIN_PAGE
+// ==/UserScript==
 
-const jqueryui_css = getResourceText("jqueryui_css")
-const jquerys_css = getResourceText("jquerys_css")
-const juqeryt_css = getResourceText("juqeryt_css")
-const fontawesome_css = getResourceText("fontawesome_css")
-const hack_css = getResourceText("hack_css")
-const terminal_css = getResourceText("terminal_css")
 
-addStyle(jqueryui_css)
-addStyle(jquerys_css)
-addStyle(juqeryt_css)
-addStyle(fontawesome_css)
-addStyle(hack_css)
-addStyle(terminal_css)
+const jqueryui_css = GM_getResourceText("jqueryui_css")
+const jquerys_css = GM_getResourceText("jquerys_css")
+const juqeryt_css = GM_getResourceText("juqeryt_css")
+const fontawesome_css = GM_getResourceText("fontawesome_css")
+const hack_css = GM_getResourceText("hack_css")
+const terminal_css = GM_getResourceText("terminal_css")
+
+GM_addStyle(jqueryui_css)
+GM_addStyle(jquerys_css)
+GM_addStyle(juqeryt_css)
+GM_addStyle(fontawesome_css)
+GM_addStyle(hack_css)
+GM_addStyle(terminal_css)
 
 const $ = jQuery
 var wmks = undefined
