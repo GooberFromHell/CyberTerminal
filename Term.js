@@ -20,9 +20,9 @@
 // @require      file://C:Users/LordGoober/Desktop/Code/Term/Term Dev.js
 // ==/UserScript==
 
+
 const html = `
 <div id="rework-container">
-<div id="divider" class="ui-resizable-handle"><span class="resizable-handle"></span></div>
     <div id="terminal">
         <div id="terminal-tools">
             <div id='checkbox-tools'>
@@ -41,19 +41,15 @@ const html = `
         style="color:inherit;border:1px dashed rgba(211, 211, 211, 0.514);background-color:rgba(211, 211, 211, 0.233); padding: 5px;">
         <div>
             <span class='fa fa-cloud-upload' </span>
-                <span>Dropping file here or</span>
-                <div>
-                    <input id='upload-file' type="file">
-                    <a>select one</a>
-                </div>
+            <span>Dropping file here or</span>
+            <div>
+                <input id='upload-file' type="file">
+                <a>select one</a>
+            </div>
         </div>
     </div>
     <a id='close-over' class="icon-btn"><i class="fa fa-close"></i></a>
-</div>`
-
-const resizer_css = `
-position: relative;
-z-index: 99999;
+</div>
 `
 
 function init(data) {
@@ -107,11 +103,35 @@ function init(data) {
         backgroundColor: '#080808',
     }
 
+    const dividerStyles = {
+        zIndex: 99999,
+        width: "100%",
+        height: "2px",
+        cursor: "none",
+        display: "flex",
+        justifyContent: "center",
+        marginBottom: "5px",
+        backgroundColor: '#404040',
+    }
+
+    const dividerHandleStyles = {
+        position: 'relative',
+        top: '-5px',
+        minWidth: "50px",
+        minHeight: "10px",
+        cursor: "row-resize",
+        backgroundColor: "#404040",
+        borderRadius: "3px",
+    }
+
     const vmInterfaceStyles = {
         flex: '0 0 auto',
         maxWidth: '100%',
         height: '100%',
         backgroundColor: '#080808',
+    }
+    const mainCanvasStyles = {
+        zIndex: 999,
     }
 
     const terminalContainerStyles = {
@@ -121,9 +141,7 @@ function init(data) {
         backgroundColor: '#eee',
         width: '100%',
         height: '20%',
-        borderTop: '4px solid #404040',
-        boxShadow: 'inset 0px 0px 10px 2px rgba(0,0,0,0.75)',
-        backgroundColor: '--terminal-background-color', // Added a custom property
+        backgroundColor: '#000', // Added a custom property
     }
 
     const terminalToolsStyles = {
@@ -216,30 +234,16 @@ function init(data) {
         backgroundColor: '#242424ad',
     }
 
-    class IconCheckbox extends HTMLInputElement {
-        constructor(props) {
-            super()
-            this.id = `${props.id}-checkbox`
-            $(this).css(inputStyles.checkbox)
-            this.type = props.type
-            props.checked && this.setAttribute('checked', true)
-            function clicked(e) {
-                try {
-                    props.onClick.bind(this)(e)
-                } catch (e) {
-                    console.error(e)
-                }
-            }
-            this.addEventListener('click', clicked)
-        }
-    }
+
 
     class IconCheckboxContainer extends HTMLDivElement {
         constructor(props) {
             super(props)
-            this.setAttribute('data-tooltip', props.tooltip)
-            this.setAttribute('data-type', props.type)
-
+            if (props.data) {
+                Object.entries(props.data).forEach((key) => {
+                    this.setAttribute(`data-${key[0]}`, key[1])
+                })
+            } 
             this.id = `${props.id}-checkbox-container`
 
             let input = new IconCheckbox(props)
@@ -255,12 +259,34 @@ function init(data) {
             //TODO init tooltips..
         }
     }
+    class IconCheckbox extends HTMLInputElement {
+        constructor(props) {
+            super()
+
+            this.id = `${props.id}-checkbox`
+            $(this).css(inputStyles.checkbox)
+            this.type = props.type
+            props.checked && this.setAttribute('checked', true)
+            function clicked(e) {
+                try {
+                    props.onClick.bind(this)(e)
+                } catch (e) {
+                    console.error(e)
+                }
+            }
+            this.addEventListener('click', clicked)
+        }
+    }
 
     class IconButton extends HTMLAnchorElement {
         constructor(props) {
             super()
+            if (props.data) {
+                Object.entries(props.data).forEach((key) => {
+                    this.setAttribute(`data-${key[0]}`, key[1])
+                })
+            }
             this.id = `${props.id}-btn`
-
             const icon = document.createElement('i')
             $(icon).css({
                 color: "#1e87f0",
@@ -270,9 +296,6 @@ function init(data) {
             this.append(icon)
 
             props.style ? $(this).css(props.style) : $(this).css(inputStyles.button)
-
-            this.setAttribute('data-tooltip', props.tooltip)
-            this.setAttribute('data-type', props.type)
             function clicked(e) {
                 try {
                     props.onClick.bind(this)(e)
@@ -287,9 +310,12 @@ function init(data) {
     class IconSelection extends HTMLSelectElement {
         constructor(props) {
             super()
+            if (props.data) {
+                Object.entries(props.data).forEach((key) => {
+                    this.setAttribute(`data-${key[0]}`, key[1])
+                })
+            }
             this.id = `${props.id}-select`
-            this.setAttribute('data-tooltip', props.tooltip)
-            this.setAttribute('data-type', props.type)
             function clicked(e) {
                 try {
                     props.onClick.bind(this)(e)
@@ -497,6 +523,7 @@ function init(data) {
         ...terminalEvents,
         greetings: false,
         prompt: terminalPrompts.default,
+        height: $('#terminal').height(),
     }
 
     const jqueryui_css = GM_getResourceText("jqueryui_css")
@@ -518,6 +545,7 @@ function init(data) {
     $('body').append(html)
 
     const reworkContainer = $('#rework-container')
+    const mainCanvas = $('#mainCanvas')
     const vmInterface = $('#vmware-interface')
     const terminalContainer = $('#terminal')
     const terminalTools = $('#terminal-tools')
@@ -526,11 +554,19 @@ function init(data) {
     const terminalButtons = $('#button-tools')
     const uploadOverlay = $('#upload-overlay')
 
+    const divider = $("<div id='divider' class='ui-resizable-handle ui-resizable-s'></div>")
+    const dividerHandle = $("<span id='divider-handle' class='resizable-handle'></span>")
+    divider.append(dividerHandle)
+    vmInterface.append(divider)
+
     // Add the CSS-in-JS objects back to the jQuery items to retain their original stylings
     $('html').css(rebase_css)
     $('body').css(rebase_css)
 
     reworkContainer.css(reworkContainerStyles)
+    mainCanvas.css(mainCanvasStyles)
+    divider.css(dividerStyles)
+    dividerHandle.css(dividerHandleStyles)
     vmInterface.css(vmInterfaceStyles)
     terminalContainer.css(terminalContainerStyles)
     terminalTools.css(terminalToolsStyles)
@@ -559,8 +595,6 @@ function init(data) {
                 case 'button':
                     element = new IconButton(props)
                     $(`#${props.type}-tools`).append(element)
-
-
                     break
                 case 'select':
                     element = new IconSelection(props)
@@ -584,21 +618,37 @@ function init(data) {
             props.onLoad.bind($(element))()
         }
     })
+
+    // Init tooltips
+    $('#terminal').tooltip({
+        items: "[data-tooltip]",
+        content: function () {
+            var element = $(this)
+            if (element.is("[data-tooltip]")) {
+                var text = element.data("tooltip")
+                return $("<p>").text(text)
+            }
+        },
+        position: {
+            collision: "flipfit",
+        },
+    })
     // Make the VMWare console resizable
     setTimeout(() => {
         $("#vmware-interface").resizable({
-            handles: 's',
+            handles: {
+                's': "#divider",
+            },
             ghost: true,
             stop: function (event, ui) {
-                if (!toggles.adjust_resolution) {
+                if (toggles.adjust_resolution) {
                     wmks.wmks._setOption('changeResolution', true)
                     wmks.wmks._setOption('rescale', true)
                     $('#mainCanvas').css('height', `${$('#vmware-interface').height()}px !important`)
                 }
-                wmks.
-                    setMargins()
+                setMargins()
             },
-            // minHeight: $('#divider').outerHeight()
+            minHeight: $('#terminal>#terminal-tools').outerHeight()
         })
     }, 1000)
 }
