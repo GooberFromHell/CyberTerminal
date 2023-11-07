@@ -17,9 +17,7 @@
 // @resource     fontawesome_css https://raw.githubusercontent.com/GooberFromHell/CyberTerminal/main/css/font-awesome/font-awesome.css
 // @resource     hack_css https://raw.githubusercontent.com/GooberFromHell/CyberTerminal/main/css/hack/hack.css
 // @resource     terminal_css https://raw.githubusercontent.com/GooberFromHell/CyberTerminal/main/css/jquery-terminal/jquery.terminal.css
-// @require      file://C:Users/LordGoober/Desktop/Code/Term/Term Dev.js
 // ==/UserScript==
-
 
 const html = `
 <div id="rework-container">
@@ -138,10 +136,9 @@ function init(data) {
         ...style.flex,
         ...style.flexColumn,
         flex: ' 1 1 auto',
-        backgroundColor: '#eee',
         width: '100%',
         height: '20%',
-        backgroundColor: '#000', // Added a custom property
+        backgroundColor: '#000',
     }
 
     const terminalToolsStyles = {
@@ -243,7 +240,7 @@ function init(data) {
                 Object.entries(props.data).forEach((key) => {
                     this.setAttribute(`data-${key[0]}`, key[1])
                 })
-            } 
+            }
             this.id = `${props.id}-checkbox-container`
 
             let input = new IconCheckbox(props)
@@ -436,14 +433,14 @@ function init(data) {
         checked: toggles.adjust_resolution,
         onClick: (e) => {
             toggles.adjust_resolution = e.target.checked
-            wmks.wmks._setOption('changeResolution', e.target.checked)
-            wmks.wmks._setOption('rescale', e.target.checked)
             setMargins()
+            wmks.wmks._setOption('rescale', e.target.checked)
+            wmks.wmks._setOption('changeResolution', e.target.checked)
         },
     }, {
         id: 'vm',
         type: 'select',
-        data: { tooltip: "Select VM to connect to.", },
+        data: { tooltip: "Select VM to connect to." },
         preload: (e) => {
             // Get list of VMs for connected range
             let host = window.location.host
@@ -605,7 +602,6 @@ function init(data) {
                     break
             }
             $(`#${props.type}-tools`).append(element)
-
         }
     })
 
@@ -633,6 +629,7 @@ function init(data) {
             collision: "flipfit",
         },
     })
+
     // Make the VMWare console resizable
     setTimeout(() => {
         $("#vmware-interface").resizable({
@@ -651,6 +648,26 @@ function init(data) {
             minHeight: $('#terminal>#terminal-tools').outerHeight()
         })
     }, 1000)
+
+    const targetNode = document.getElementById('vmware-interface');
+
+    const observer = new MutationObserver(mutations => {
+        mutations.forEach(mutation => {
+            if (mutation.type === 'childList') {
+                console.log('A child node has been added or removed.');
+            } else if (mutation.type === 'attributes') {
+                console.log('An attribute has been modified.');
+            }
+        });
+    });
+
+    const config = {
+        childList: true,
+        attributes: true,
+        subtree: true
+    };
+
+    observer.observe(targetNode, config);
 }
 
 function setMargins() {
