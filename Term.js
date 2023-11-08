@@ -19,6 +19,119 @@
 // @resource     terminal_css https://raw.githubusercontent.com/GooberFromHell/CyberTerminal/main/css/jquery-terminal/jquery.terminal.css
 // ==/UserScript==
 
+// require('jquery')
+// require('jquery-ui')
+// require('jquery.terminal')
+
+const unicodeToVscan = {
+    "13": 28,
+    "32": 57,
+    "33": 2,
+    "34": 40,
+    "35": 4,
+    "36": 5,
+    "37": 6,
+    "38": 8,
+    "39": 40,
+    "40": 10,
+    "41": 11,
+    "42": 9,
+    "43": 13,
+    "44": 51,
+    "45": 12,
+    "46": 52,
+    "47": 53,
+    "48": 11,
+    "49": 2,
+    "50": 3,
+    "51": 4,
+    "52": 5,
+    "53": 6,
+    "54": 7,
+    "55": 8,
+    "56": 9,
+    "57": 10,
+    "58": 39,
+    "59": 39,
+    "60": 51,
+    "61": 13,
+    "62": 52,
+    "63": 53,
+    "64": 3,
+    "65": 30,
+    "66": 48,
+    "67": 46,
+    "68": 32,
+    "69": 18,
+    "70": 33,
+    "71": 34,
+    "72": 35,
+    "73": 23,
+    "74": 36,
+    "75": 37,
+    "76": 38,
+    "77": 50,
+    "78": 49,
+    "79": 24,
+    "80": 25,
+    "81": 16,
+    "82": 19,
+    "83": 31,
+    "84": 20,
+    "85": 22,
+    "86": 47,
+    "87": 17,
+    "88": 45,
+    "89": 21,
+    "90": 44,
+    "91": 26,
+    "92": 43,
+    "93": 27,
+    "94": 7,
+    "95": 12,
+    "96": 41,
+    "97": 30,
+    "98": 48,
+    "99": 46,
+    "100": 32,
+    "101": 18,
+    "102": 33,
+    "103": 34,
+    "104": 35,
+    "105": 23,
+    "106": 36,
+    "107": 37,
+    "108": 38,
+    "109": 50,
+    "110": 49,
+    "111": 24,
+    "112": 25,
+    "113": 16,
+    "114": 19,
+    "115": 31,
+    "116": 20,
+    "117": 22,
+    "118": 47,
+    "119": 17,
+    "120": 45,
+    "121": 21,
+    "122": 44,
+    "123": 26,
+    "124": 43,
+    "125": 27,
+    "126": 41
+}
+
+const stupid_css_override = `
+    #mainCanvas {
+        position: relative !important;
+    }
+    #terminal {
+        z-index: 999 !important;
+    }
+
+`
+
 const html = `
 <div id="rework-container">
     <div id="terminal">
@@ -30,24 +143,19 @@ const html = `
             </div>
             <div id="select-tools"></div>
         </div>
-        <div id='terminal-console'>
+            <div id='terminal-console'>
         </div>
     </div>
-    </div>
-    <div id="upload-overlay" class="d-none">
-    <div id='dropArea'
-        style="color:inherit;border:1px dashed rgba(211, 211, 211, 0.514);background-color:rgba(211, 211, 211, 0.233); padding: 5px;">
-        <div>
-            <span class='fa fa-cloud-upload' </span>
-            <span>Dropping file here or</span>
-            <div>
-                <input id='upload-file' type="file">
-                <a>select one</a>
-            </div>
-        </div>
-    </div>
-    <a id='close-over' class="icon-btn"><i class="fa fa-close"></i></a>
 </div>
+<div id="upload-overlay">
+    <div id='dropArea' style="color:inherit;border:1px dashed rgba(211, 211, 211, 0.514);background-color:rgba(211, 211, 211, 0.233);">
+        <div style="display: flex; flex-direction: column; justify-content: center; align-items: center;">
+            <i class="fa fa-upload" style="font-size: 50px;"></i>
+            <p>Drop file to upload</p>
+        </div>
+    </div>
+</div>
+
 `
 
 function init(data) {
@@ -74,162 +182,155 @@ function init(data) {
         padding: '0px',
     }
 
-    const style = {
-        flex: {
-            display: 'flex',
-        },
-        flexCenter: {
-            justifyContent: 'center',
-            alignItems: 'center',
-        },
-        flexColumn: {
-            flexDirection: 'column',
-        },
-        flexCenterColumn: {
-            ...this.flexCenter,
-            ...this.flexColumn,
-        }
+    const css = `
+    #rework-container {
+        min-height: 100%;
+        display: flex;
+        flex-direction: column;
+        font-family: Hack, "Segoe UI";
+        color: white;
+        font-size: 10px;
+        background-color: #080808;
     }
 
-    const reworkContainerStyles = {
-        minHeight: '100%',
-        display: 'flex',
-        flexDirection: 'column',
-        fontFamily: 'Hack, "Segoe UI"',
-        color: 'white',
-        fontSize: '10px',
-        backgroundColor: '#080808',
+    #divider {
+        z-index: 99999;
+        width: 100%;
+        height: 2px;
+        cursor: none;
+        display: flex;
+        justify-content: center;
+        margin-bottom: 5px;
+        background-color: #404040;
+        box-shadow: 0px 0px 5px 0px rgba(0, 0, 0, 0.75);
     }
 
-    const dividerStyles = {
-        zIndex: 99999,
-        width: "100%",
-        height: "2px",
-        cursor: "none",
-        display: "flex",
-        justifyContent: "center",
-        marginBottom: "5px",
-        backgroundColor: '#404040',
+    #divider-handle {
+        position: relative;
+        top: -5px;
+        min-width: 50px;
+        min-height: 10px;
+        cursor: row-resize;
+        background-color: #404040;
+        border-radius: 3px;
     }
 
-    const dividerHandleStyles = {
-        position: 'relative',
-        top: '-5px',
-        minWidth: "50px",
-        minHeight: "10px",
-        cursor: "row-resize",
-        backgroundColor: "#404040",
-        borderRadius: "3px",
+    #vmware-interface {
+        position: relative;
+        flex: 0 0 auto;
+        max-width: 100%;
+        height: 100%;
+        background-color: #080808;
     }
 
-    const vmInterfaceStyles = {
-        flex: '0 0 auto',
-        maxWidth: '100%',
-        height: '100%',
-        backgroundColor: '#080808',
-    }
-    const mainCanvasStyles = {
-        zIndex: 999,
+    #mainCanvas {
+        z-index: 999;
     }
 
-    const terminalContainerStyles = {
-        ...style.flex,
-        ...style.flexColumn,
-        flex: ' 1 1 auto',
-        width: '100%',
-        height: '20%',
-        backgroundColor: '#000',
+    #terminal {
+        display: flex;
+        flex-direction: column;
+        flex: 1 1 auto;
+        width: 100%;
+        height: 20%;
+        background-color: #000;
     }
 
-    const terminalToolsStyles = {
-        ...style.flex,
-        ...style.row,
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        position: 'relative',
-        gap: '10px',
-        padding: '0 10px',
-        backgroundColor: '#222222',
+    #terminal-tools {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        position: relative;
+        gap: 10px;
+        padding: 0 10px;
+        background-color: #222222;
     }
 
-    const terminalCheckboxesStyles = {
-        ...style.flex,
-        gap: "5px",
-        position: 'relative',
-
+    #checkbox-tools {
+        display: flex;
+        gap: 5px;
+        position: relative;
     }
 
-    const terminalSelectionsStyles = {
-        ...style.flex,
-        position: 'relative',
+    #selection-tools {
+        display: flex;
+        position: relative;
+        height: 24px;
     }
 
-    const terminalButtonsStyles = {
-        ...style.flex,
-        gap: "10px",
-        position: 'relative',
-        marginLeft: 'auto',
+    #button-tools {
+        display: flex;
+        gap: 10px;
+        position: relative;
+        margin-left: auto;
     }
 
-    const toolItemContainerStyles = {
-        ...style.flex,
-        ...style.flexCenter
+    #tool-item-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
     }
 
-    const inputStyles = {
-
-        checkbox: {
-            backgroundColor: '#222222',
-            width: '15px',
-            height: '15px',
-            margin: '5px',
-            padding: '0px',
-            borderRadius: '5px',
-            accentColor: '#222222',
-        },
-        button: {
-            ...style.flex,
-            ...style.flexCenter,
-            borderRadius: '50%',
-            justifyContent: 'center',
-            backgroundColor: 'transparent',
-            borderColor: '#717171',
-            height: '30px',
-            width: '30px',
-            transition: 'all 0.2s ease-in-out',
-            backgroundColor: '#222222',
-        },
-        select: {
-            minWidth: '200px',
-            height: '30px',
-            borderRadius: '3px',
-            border: 'none',
-            backgroundColor: '#222222',
-        },
-        newButton: {
-            ...style.flex,
-            ...style.flexCenter,
-            position: 'absolute',
-            borderRadius: '50%',
-            zIndex: 999,
-            height: '30px',
-            width: '30px',
-            bottom: '10px',
-            right: '10px',
-            backgroundColor: 'rgba(0,0,0,.35)'
-        }
+    #terminal-console {
+        background-color: #000;
     }
 
-    const uploadOverlayStyles = {
-        display: 'none',
-        position: 'absolute',
-        inset: 0,
-        zIndex: 999,
-        placeItems: 'center',
-        margin: '0px',
-        color: 'rgba(211, 211, 211, 0.514)',
-        backgroundColor: '#242424ad',
+    input[type="checkbox"] {
+        background-color: #222222;
+        width: 15px;
+        height: 15px;
+        margin: 5px;
+        padding: 0px;
+        border-radius: 5px;
+        accent-color: #222222;
     }
+
+    input[type="button"] {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        border-radius: 50%;
+        justify-content: center;
+        background-color: transparent;
+        border-color: #717171;
+        height: 30px;
+        width: 30px;
+        transition: all 0.2s ease-in-out;
+        background-color: #222222;
+    }
+
+    select {
+        min-width: 200px;
+        height: 30px;
+        border-radius: 3px;
+        border: none;
+        background-color: #222222;
+    }
+
+    #new-btn {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        position: absolute;
+        border-radius: 50%;
+        z-index: 999;
+        height: 30px;
+        width: 30px;
+        bottom: 10px;
+        right: 10px;
+        background-color: rgba(0, 0, 0, 0.35);
+    }
+
+    #upload-overlay {
+        display: grid;
+        position: absolute;
+        z-index: 999;
+        place-items: center;
+        margin: 0px;
+        color: rgba(211, 211, 211, 0.514);
+        background-color: #242424ad;
+}
+    `
 
 
 
@@ -252,7 +353,7 @@ function init(data) {
 
             this.appendChild(label)
 
-            $(this).css(toolItemContainerStyles)
+            // $(this).css(toolItemContainerStyles)
             //TODO init tooltips..
         }
     }
@@ -261,7 +362,7 @@ function init(data) {
             super()
 
             this.id = `${props.id}-checkbox`
-            $(this).css(inputStyles.checkbox)
+            // $(this).css(inputStyles.checkbox)
             this.type = props.type
             props.checked && this.setAttribute('checked', true)
             function clicked(e) {
@@ -292,7 +393,7 @@ function init(data) {
             icon.classList = props.icon
             this.append(icon)
 
-            props.style ? $(this).css(props.style) : $(this).css(inputStyles.button)
+            // props.style ? $(this).css(props.style) : $(this).css(inputStyles.button)
             function clicked(e) {
                 try {
                     props.onClick.bind(this)(e)
@@ -322,7 +423,7 @@ function init(data) {
             }
             this.addEventListener('change', clicked)
 
-            $(this).css(inputStyles.select)
+            // $(this).css(inputStyles.select)
             if (props.preload) {
                 try {
                     props.preload()
@@ -370,8 +471,7 @@ function init(data) {
         classs: "icon-btn",
         icon: "fa fa-terminal",
         onClick: function () {
-            wmks.wmks._keyboardManager.sendVScanKey([91])
-            // openTerminal('windows')
+            wmks.wmks.getLegacyKeyboardManager().sendKey(26)
         },
     }, {
         id: "cad",
@@ -436,6 +536,7 @@ function init(data) {
             setMargins()
             wmks.wmks._setOption('rescale', e.target.checked)
             wmks.wmks._setOption('changeResolution', e.target.checked)
+            wmks.wmks.rescaleOrResize()
         },
     }, {
         id: 'vm',
@@ -477,7 +578,7 @@ function init(data) {
 
     const staticButtons = [{
         parent: 'body',
-        style: inputStyles.newButton,
+        // style: inputStyles.newButton,
         id: "new",
         type: 'button',
         data: { tooltip: "Switch back to old interface.", },
@@ -541,15 +642,9 @@ function init(data) {
     // Append skeleton html for the new interface
     $('body').append(html)
 
-    const reworkContainer = $('#rework-container')
-    const mainCanvas = $('#mainCanvas')
     const vmInterface = $('#vmware-interface')
     const terminalContainer = $('#terminal')
     const terminalTools = $('#terminal-tools')
-    const terminalCheckboxes = $('#checkbox-tools')
-    const terminalSelections = $('#select-tools')
-    const terminalButtons = $('#button-tools')
-    const uploadOverlay = $('#upload-overlay')
 
     const divider = $("<div id='divider' class='ui-resizable-handle ui-resizable-s'></div>")
     const dividerHandle = $("<span id='divider-handle' class='resizable-handle'></span>")
@@ -560,28 +655,22 @@ function init(data) {
     $('html').css(rebase_css)
     $('body').css(rebase_css)
 
-    reworkContainer.css(reworkContainerStyles)
-    mainCanvas.css(mainCanvasStyles)
-    divider.css(dividerStyles)
-    dividerHandle.css(dividerHandleStyles)
-    vmInterface.css(vmInterfaceStyles)
-    terminalContainer.css(terminalContainerStyles)
-    terminalTools.css(terminalToolsStyles)
-    terminalCheckboxes.css(terminalCheckboxesStyles)
-    terminalSelections.css(terminalSelectionsStyles)
-    terminalButtons.css(terminalButtonsStyles)
-    uploadOverlay.css(uploadOverlayStyles)
+    // reworkContainer.css(reworkContainerStyles)
+    // mainCanvas.css(mainCanvasStyles)
+    // divider.css(dividerStyles)
+    // dividerHandle.css(dividerHandleStyles)
+    // vmInterface.css(vmInterfaceStyles)
+    // terminalContainer.css(terminalContainerStyles)
+    // terminalTools.css(terminalToolsStyles)
+    // terminalCheckboxes.css(terminalCheckboxesStyles)
+    // terminalSelections.css(terminalSelectionsStyles)
+    // terminalButtons.css(terminalButtonsStyles)
+    // terminalConsole.css(terminalConsoleStyles)
+    // uploadOverlay.css(uploadOverlayStyles)
 
-    // Hide Old Interface
-    $('#content-wrapper').hide()
-
-    // VMWare console to new interface
-    $('#vmware-interface').prependTo('#rework-container')
-
-    // Initialize the jQuery Terminal
-    $('#terminal-console').terminal(terminalCommands, {
-        ...terminalOptions
-    })
+    // Add custom CSS to override the stupid wkms resizing listener thats more elusive in the DOM than bigfoot is in the woods...
+    GM_addStyle(stupid_css_override)
+    GM_addStyle(css)
 
     // Create interface elements and functionallity
     $(interfaceElements).each((idx, props) => {
@@ -615,6 +704,18 @@ function init(data) {
         }
     })
 
+    // Add expand and collapse buttons to the terminal
+    const expand = $("<a id='expand' class='icon-btn' hidden><i class='fa fa-arrow-up'></i></a>")
+    const collapse = $("<a id='collapse' class='icon-btn'><i class='fa fa-arrow-down'></i></a>")
+    terminalTools.prepend(expand)
+    terminalTools.prepend(collapse)
+
+    // Hide feedback container from showing at every resize of the terminal
+    $('.feedback-container.cursor-icon-shadow').hide()
+
+    // Finally show new interface
+    toggleInterface()
+
     // Init tooltips
     $('#terminal').tooltip({
         items: "[data-tooltip]",
@@ -630,6 +731,92 @@ function init(data) {
         },
     })
 
+    // Initialize the jQuery Terminal
+    $('#terminal-console').terminal(terminalCommands, {
+        ...terminalOptions,
+    })
+
+    // set minimum height for terminal so the slider dosen't completly hide the element
+    terminalContainer.css('min-height', $('#terminal-tools').height())
+
+    // Add expand and collpase functionality
+    $('#expand').on('click', function () {
+        let height = localStorage.getItem('terminal_height', '100%')
+
+        // set #vmware-interface to flex: 1 1 auto
+        $('#vmware-interface').css('flex', '0 0 auto')
+
+
+        $('#terminal').animate({ height: height }, 500)
+        $('#terminal').css('flex', '1 1 auto')
+
+
+        $('#expand').hide()
+        $('#collapse').show()
+    })
+
+    $('#collapse').on('click', function () {
+        localStorage.setItem('terminal_height', terminalContainer.height())
+        height = $('#terminal-tools').height()
+
+        // set #vmware-interface to flex: 1 1 auto
+        $('#vmware-interface').css('flex', '1 1 auto')
+        $('#terminal').css('flex', '0 0 auto')
+
+        // animate resize
+        $('#terminal').animate({ height: 0 }, 500)
+        $('#expand').show()
+        $('#collapse').hide()
+    })
+
+    // terminal drang and drop events
+    function dragOver(e) {
+        e.preventDefault()
+        e.stopPropagation()
+
+        let position = {
+            top: $('#terminal').offset().top,
+            left: $('#terminal').offset().left,
+            right: 0,
+            bottom: 0
+        }
+
+        $('#upload-overlay').css(position)
+        $('#dropArea').css(position)
+        $('#upload-overlay').show()
+    }
+
+    function getFileContents(e) {
+        let contents = e.target.result
+        let lines = contents.split('\n')
+
+        for (var line = 0; line < lines.length; line++) {
+            lines[line] = line == lines.length - 1 ? lines[line] + '\r' : lines[line]
+            setTimeout(function (lines, line) {
+                wmks.wmks.sendInputString(lines[line])
+            }(lines, line), 100 * line)
+        }
+    }
+    function dragDrop(e) {
+        e.preventDefault()
+        e.stopPropagation()
+
+        let selectedFile = e.originalEvent.dataTransfer.files[0]
+
+        // Read and display the text content of the dropped file
+        let reader = new FileReader()
+        reader.onload = getFileContents
+        reader.readAsText(selectedFile)
+        $('#upload-overlay').hide()
+    }
+
+    // Add drag and drop events to terminal
+    $('#terminal').on('dragover', dragOver)
+    $('#upload-overlay').on('dragleave', () => { $('#upload-overlay').hide() })
+    $('#upload-overlay').on('dragover', dragOver)
+    $('#upload-overlay').on('drop', dragDrop)
+    $('#dropArea').on('drop', dragDrop)
+
     // Make the VMWare console resizable
     setTimeout(() => {
         $("#vmware-interface").resizable({
@@ -637,37 +824,46 @@ function init(data) {
                 's': "#divider",
             },
             ghost: true,
+            start: function (event, ui) {
+                $('#expand').hide()
+                $('#collapse').show()
+            },
             stop: function (event, ui) {
                 if (toggles.adjust_resolution) {
                     wmks.wmks._setOption('changeResolution', true)
                     wmks.wmks._setOption('rescale', true)
                     $('#mainCanvas').css('height', `${$('#vmware-interface').height()}px !important`)
+
                 }
+                $('#vmware-interface').css('flex', '0 0 auto')
+                $('#terminal').css('flex', '1 1 auto')
                 setMargins()
             },
-            minHeight: $('#terminal>#terminal-tools').outerHeight()
+            maxHeight: window.innerHeight - $('#terminal-tools').outerHeight(),
         })
+
     }, 1000)
 
-    const targetNode = document.getElementById('vmware-interface');
 
-    const observer = new MutationObserver(mutations => {
-        mutations.forEach(mutation => {
-            if (mutation.type === 'childList') {
-                console.log('A child node has been added or removed.');
-            } else if (mutation.type === 'attributes') {
-                console.log('An attribute has been modified.');
-            }
-        });
-    });
+    // const targetNode = document.getElementById('vmware-interface')
 
-    const config = {
-        childList: true,
-        attributes: true,
-        subtree: true
-    };
+    // const observer = new MutationObserver(mutations => {
+    //     mutations.forEach(mutation => {
+    //         if (mutation.type === 'childList') {
+    //             console.log('A child node has been added or removed.')
+    //         } else if (mutation.type === 'attributes') {
+    //             console.log('An attribute has been modified.')
+    //         }
+    //     })
+    // })
 
-    observer.observe(targetNode, config);
+    // const config = {
+    //     childList: true,
+    //     attributes: true,
+    //     subtree: true
+    // }
+
+    // observer.observe(targetNode, config)
 }
 
 function setMargins() {
@@ -681,8 +877,7 @@ function setMargins() {
         return ((screenWidth - mainCanvasWidth) / 2)
     }
 
-    $('#mainCanvas').css('margin-left', getMargin)
-    $('#mainCanvas').css('margin-right', getMargin)
+    $('#mainCanvas').css('margin', `0 ${getMargin}px`)
 }
 
 function getWMKS() {
