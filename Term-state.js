@@ -348,6 +348,11 @@ const interfaceElements = [
         data: { tooltip: "When the VM Console is resized the VM with adjust its resolution to match the new console side. Reccommened use with rescale.", },
     },
     {
+        id: "interactive",
+        type: 'checkbox',
+        data: { tooltip: "When checked, the VM Console will be interactive.", },
+    },
+    {
         id: 'vm',
         type: 'select',
         data: { tooltip: "Select VM to connect to." },
@@ -429,35 +434,35 @@ const state = {
         terminalKeymap: {
             keydown: function (e, terminal) {
                 console.log('keydown: ', e.keyCode)
-                this.wmksKeyboard._syncModifiers(e)
-                if (e.keyCode == 17) {
-                    console.info(`Meta key pressed: ${e.key}`)
-                    if (this.wmksKeyboard.keyDownKeyTimer !== null) {
-                        clearTimeout(this.keyDownKeyTimer)
+                if (this.toggles.interactive) {
+                    this.wmks.getLegacyKeyboardManager().onKeyDown(e)
+                    this.wmksKeyboard.sendKey(9, true, false)
+                } else {
+                    this.wmksKeyboard._syncModifiers(e)
+                    if ([17].includes(e.keyCode)) {
+                        console.info(`Meta key pressed: ${e.key}`)
+                        if (this.wmksKeyboard.keyDownKeyTimer !== null) {
+                            clearTimeout(this.keyDownKeyTimer)
+                        }
+                        this.wmksKeyboard._handleControlKeys(e.keyCode)
+                    } else if (this.wmksKeyboard.pendingKey == 17 && e.key == 'C') {
+                        this.wmksKeyboard.keyDownKeyTimer = setTimeout(function () {
+                            this.wmks.sendInputString('c')
+                            // this.wmksKeyboard.sendKey(e.keyCode, true, false)
+                            this.wmksKeyboard.keyDownKeyTimer = null
+                            this.wmksKeyboard.pendingKey = null
+                        }.bind(this), 0)
                     }
-                    this.wmksKeyboard._handleControlKeys(e.keyCode)
-                    return
-                } else if (this.wmksKeyboard.pendingKey == 17 && e.key == 'C') {
+                    this.wmksKeyboard.pendingKey = e.keyCode
                     this.wmksKeyboard.keyDownKeyTimer = setTimeout(function () {
-                        this.wmksKeyboard.sendKey(e.keyCode, false, false)
                         this.wmksKeyboard.keyDownKeyTimer = null
                         this.wmksKeyboard.pendingKey = null
-                    }.bind(this), 0)
-                } else if (this.wmksKeyboard.pendingKey == 9 && e.keyCode == 9) {
-                    this.wmksKeyboard.keyDownKeyTimer = setTimeout(function () {
-                        this.wmksKeyboard.sendKey(9, false, false)
-                        this.wmksKeyboard.sendKey(9, true, false)
-                        this.wmksKeyboard.sendKey(9, false, false)
-                        this.wmksKeyboard.sendKey(9, true, false)
-
-                        this.wmksKeyboard.keyDownKeyTimer = null
-                        this.wmksKeyboard.pendingKey = null
-                    }.bind(this), 0)
+                    }.bind(this), 500)
                 }
-                this.wmksKeyboard.pendingKey = e.keyCode
             },
             keymap: {
                 ENTER: function (e, original) {
+                    if (this.toggles.interactive) return
                     let command = this.terminal.get_command()
                     command = this.toggles.newline ? `${command}\r` : command
                     this.wmksKeyboard._syncModifiers(e)
@@ -465,23 +470,24 @@ const state = {
                     this.wmks.sendInputString(command)
                     original()
                 },
-                "TAB+TAB": function (e, original) {
-                    return
-                }
-
+                TAB: function (e, original) {
+                    if (this.wmksKeyboard.pendingKey == 9) {
+                        let command = this.terminal.get_command()
+                        command && this.wmks.sendInputString(command)
+                        this.wmksKeyboard.sendKey(9, false, false)
+                        this.wmksKeyboard.sendKey(9, true, false)
+                        this.wmksKeyboard.sendKey(9, false, false)
+                        this.wmksKeyboard.sendKey(9, true, false)
+                    }
+                },
             },
-        },
-        terminalCommands: {
-            commands: function (command) {
-                console.info('command: ', command)
-                return ""
-            }
-        },
+        }
     },
     toggles: {
         get adjustResolution() { return $('#adjust-resolution-checkbox').prop('checked') },
         get closings() { return $('#closings-checkbox').prop('checked') },
         get newline() { return $('#newline-checkbox').prop('checked') },
+        get interactive() { return $('#interactive-checkbox').prop('checked') },
         get contentWrapperVisible() { return $('#content-wrapper').css('display') != 'none' },
         get terminalVisible() { return $('#terminal').height() > $('#terminal-tools').height() },
     },
@@ -514,10 +520,12 @@ const state = {
             "adjust-resolution": true,
             closings: false,
             newline: true,
+            interactive: false,
         },
         get closings() { return $('#closings-checkbox') },
         get newline() { return $('#newline-checkbox') },
         get adjustResolution() { return $('#adjust-resolution-checkbox') },
+        get interactive() { return $('#interactive-checkbox') },
     },
     menus: {
         get windows() { return $('#windows-menu-item') },
@@ -571,8 +579,11 @@ const state = {
                 this.elements.vmInterface.height($(window).height() - this.sizes.terminal.height)
                 this.elements.mainCanvas.height(this.sizes.vmInterface.height)
             }
-            this.wmksOptions.rescale = this.toggles.adjustResolution
-            this.wmksOptions.changeResolution = this.toggles.adjustResolution
+            if (this.toggles.adjustResolution != this.wmksOptions.adjustResolution) {
+                this.wmksOptions.changeResolution = this.toggles.adjustResolution
+                this.wmksOptions.rescale = this.toggles.adjustResolution
+            }
+
         },
         resizeObserverFactory: function (target, caller, callback) {
             let targetElement = document.querySelector(target)
@@ -637,11 +648,13 @@ const state = {
                 this.buttons.expand.show()
                 this.buttons.collapse.hide()
             } else {
-                this.elements.vmInterface.css('flex', '0 0 auto')
+                this.elements.vmInterface.css('flex', '0 1 auto')
+                this.elements.terminal.css('flex', '1 0 auto')
                 this.elements.terminal.height(this.sizes.prevTerminalSize)
                 setTimeout(() => {
                     this.elements.vmInterface.css('flex', '0 0 auto')
                     this.elements.terminal.css('flex', '1 1 auto')
+                    this.elements.terminal.height('unset')
                 }, 550)
                 this.buttons.expand.hide()
                 this.buttons.collapse.show()
@@ -799,7 +812,7 @@ const state = {
         onClosings: function (e) {
             console.info('Closings toggled')
         },
-        onnewline: function (e) {
+        onNewline: function (e) {
             console.info('New line toggled')
             this.toggles.newline = !this.toggles.newline
         },
@@ -935,7 +948,7 @@ const state = {
         this.buttons.fullscreen.on('click', this.events.onFullscreen.bind(this))
         this.buttons.oldInterface.on('click', this.events.onOldInterface.bind(this))
         this.checkboxes.closings.on('change', this.events.onClosings.bind(this))
-        this.checkboxes.newline.on('change', this.events.onnewline.bind(this))
+        this.checkboxes.newline.on('change', this.events.onNewline.bind(this))
         this.checkboxes.adjustResolution.on('change', this.events.onAdjustResolution.bind(this))
         this.selects.vmSelect.on('change', this.events.onVmSelected.bind(this))
         this.elements.terminal.on('dragover', this.events.onDragOver.bind(this))
