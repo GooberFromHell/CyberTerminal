@@ -752,19 +752,19 @@ const state = {
         onOpenTerminal: function (key, e) {
             console.info('Open Terminal clicked')
             this.wmksKeyboard._syncModifiers(e)
+            this.wmksKeyboard.sendKey(91, false, false)
+            this.wmksKeyboard.sendKey(91, true, false)
             switch (key) {
                 case 'windows':
-                    this.wmksKeyboard.sendKey(91, false, false)
-                    this.wmksKeyboard.sendKey(91, true, false)
-
                     setTimeout(() => {
                         this.wmks.sendInputString("cmd.exe /c \"start /max cmd /k mode con:cols=120 lines=2500\"\n")
                     }, 250)
                     break
                 case 'linux':
-                    this.wmksKeyboard.sendKey(113, false, false)
-                    this.wmksKeyboard.sendKey(113, true, false)
-                    this.wmks.sendInputString('gnome-terminal --hide-menubar --window --maximize \n')
+                    setTimeout(() => {
+                        this.wmks.sendInputString("term\n")
+                    }, 250)
+                    break
                     break
 
             }
