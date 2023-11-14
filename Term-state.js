@@ -416,7 +416,7 @@ const state = {
             onResize: function (terminal) {
                 try {
                     // let availSpace = $(window).height() - (this.sizes.vmInterface.height + this.elements.terminalTools.height())
-                    // // divide avail space by line terminal line height
+                    // divide avail space by line terminal line height
                     // let lines = Math.floor(availSpace / 18)
                     // terminal.setOption('outputLimit', lines)
                     // terminal.height(availspace)
@@ -428,24 +428,33 @@ const state = {
         },
         terminalKeymap: {
             keydown: function (e, terminal) {
-                console.log(e.keyCode)
+                console.log('keydown: ', e.keyCode)
                 this.wmksKeyboard._syncModifiers(e)
-                if (e.keyCode in WMKS.CONST.KB.ControlKeys) {
-
+                if (e.keyCode == 17) {
                     console.info(`Meta key pressed: ${e.key}`)
-
                     if (this.wmksKeyboard.keyDownKeyTimer !== null) {
                         clearTimeout(this.keyDownKeyTimer)
                     }
-                    this.wmksKeyboard.pendingKey = e.keyCode
                     this.wmksKeyboard._handleControlKeys(e.keyCode)
-                } else if (this.wmksKeyboard.pendingKey !== null && e.key == 'C') {
+                    return
+                } else if (this.wmksKeyboard.pendingKey == 17 && e.key == 'C') {
                     this.wmksKeyboard.keyDownKeyTimer = setTimeout(function () {
                         this.wmksKeyboard.sendKey(e.keyCode, false, false)
                         this.wmksKeyboard.keyDownKeyTimer = null
                         this.wmksKeyboard.pendingKey = null
                     }.bind(this), 0)
+                } else if (this.wmksKeyboard.pendingKey == 9 && e.keyCode == 9) {
+                    this.wmksKeyboard.keyDownKeyTimer = setTimeout(function () {
+                        this.wmksKeyboard.sendKey(9, false, false)
+                        this.wmksKeyboard.sendKey(9, true, false)
+                        this.wmksKeyboard.sendKey(9, false, false)
+                        this.wmksKeyboard.sendKey(9, true, false)
+
+                        this.wmksKeyboard.keyDownKeyTimer = null
+                        this.wmksKeyboard.pendingKey = null
+                    }.bind(this), 0)
                 }
+                this.wmksKeyboard.pendingKey = e.keyCode
             },
             keymap: {
                 ENTER: function (e, original) {
@@ -456,6 +465,9 @@ const state = {
                     this.wmks.sendInputString(command)
                     original()
                 },
+                "TAB+TAB": function (e, original) {
+                    return
+                }
 
             },
         },
