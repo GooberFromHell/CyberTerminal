@@ -762,8 +762,9 @@ const state = {
                     }, 250)
                     break
                 case 'linux':
-                    this.wmksKeyboard.sendKey(91, true, false)
-                    this.wmks.sendInputString('terminal\n')
+                    this.wmksKeyboard.sendKey(113, false, false)
+                    this.wmksKeyboard.sendKey(113, true, false)
+                    this.wmks.sendInputString('gnome-terminal --hide-menubar --window --maximize \n')
                     break
 
             }
