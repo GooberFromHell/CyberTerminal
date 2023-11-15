@@ -434,43 +434,56 @@ const state = {
         terminalKeymap: {
             keydown: function (e, terminal) {
                 console.log('keydown: ', e.keyCode)
-                if (this.toggles.interactive) {
-                    this.wmks.getLegacyKeyboardManager().onKeyDown(e)
-                    this.wmksKeyboard.sendKey(9, true, false)
-                } else {
-                    this.wmksKeyboard._syncModifiers(e)
-                    if ([17].includes(e.keyCode)) {
-                        console.info(`Meta key pressed: ${e.key}`)
-                        if (this.wmksKeyboard.keyDownKeyTimer !== null) {
-                            clearTimeout(this.keyDownKeyTimer)
-                        }
-                        this.wmksKeyboard._handleControlKeys(e.keyCode)
-                    } else if (this.wmksKeyboard.pendingKey == 17 && e.key == 'C') {
-                        this.wmksKeyboard.keyDownKeyTimer = setTimeout(function () {
-                            this.wmks.sendInputString('c')
-                            // this.wmksKeyboard.sendKey(e.keyCode, true, false)
-                            this.wmksKeyboard.keyDownKeyTimer = null
-                            this.wmksKeyboard.pendingKey = null
-                        }.bind(this), 0)
+
+                this.wmksKeyboard._syncModifiers(e)
+                if ([17].includes(e.keyCode)) {
+                    console.info(`Meta key pressed: ${e.key}`)
+                    if (this.wmksKeyboard.keyDownKeyTimer !== null) {
+                        clearTimeout(this.keyDownKeyTimer)
                     }
+                    this.wmksKeyboard._handleControlKeys(e.keyCode)
+                } else if (this.wmksKeyboard.pendingKey == 17 && e.key == 'C') {
+                    this.wmksKeyboard.keyDownKeyTimer = setTimeout(function () {
+                        this.wmks.sendInputString('c')
+                        // this.wmksKeyboard.sendKey(e.keyCode, true, false)
+                        this.wmksKeyboard.keyDownKeyTimer = null
+                        this.wmksKeyboard.pendingKey = null
+                    }.bind(this), 0)
+                }
+                if (this.toggles.interactive) {
+                    this.wmks._keyboardManager.onKeyDown(e)
+                    this.wmks._keyboardManager.onKeyUp(e)
+                    try {
+                        terminal.keymap[e.keyCode](e, terminal)
+                    } catch {
+                        console.error('Unable to find keymap for keydown event.')
+                    }
+                } else {
                     this.wmksKeyboard.pendingKey = e.keyCode
                     this.wmksKeyboard.keyDownKeyTimer = setTimeout(function () {
                         this.wmksKeyboard.keyDownKeyTimer = null
                         this.wmksKeyboard.pendingKey = null
                     }.bind(this), 500)
                 }
+
+
             },
             keymap: {
                 ENTER: function (e, original) {
-                    if (this.toggles.interactive) return
-                    let command = this.terminal.get_command()
-                    command = this.toggles.newline ? `${command}\r` : command
-                    this.wmksKeyboard._syncModifiers(e)
-                    console.info(`Active Modifiers: ${this.wmksKeyboard.activeModifiers}`)
-                    this.wmks.sendInputString(command)
-                    original()
+                    if (!this.toggles.interactive) {
+                        let command = this.terminal.get_command()
+                        command = this.toggles.newline ? `${command}\r` : command
+                        this.wmksKeyboard._syncModifiers(e)
+                        console.info(`Active Modifiers: ${this.wmksKeyboard.activeModifiers}`)
+                        this.wmks.sendInputString(command)
+                        original()
+                    } else {
+                        original()
+                    }
                 },
                 TAB: function (e, original) {
+                    e.preventDefault()
+                    e.stopPropagation()
                     if (this.wmksKeyboard.pendingKey == 9) {
                         let command = this.terminal.get_command()
                         command && this.wmks.sendInputString(command)
@@ -576,12 +589,15 @@ const state = {
         },
         resizeVm: function (e) {
             if (this.toggles.adjustResolution) {
-                this.elements.vmInterface.height($(window).height() - this.sizes.terminal.height)
-                this.elements.mainCanvas.height(this.sizes.vmInterface.height)
+                this.elements.vmInterface.height(`${$(window).height() - this.sizes.terminal.height - 10}px`)
+            } else if (this.sizes.vmInterface.height < 10) {
+                this.elements.vmInterface.height(`${$(window).height() * .8}px`)
             }
+            this.elements.mainCanvas.height(`${this.sizes.vmInterface.height}px`)
+
             if (this.toggles.adjustResolution != this.wmksOptions.adjustResolution) {
                 this.wmksOptions.changeResolution = this.toggles.adjustResolution
-                this.wmksOptions.rescale = this.toggles.adjustResolution
+                // this.wmksOptions.rescale = this.toggles.adjustResolution
             }
 
         },
@@ -591,7 +607,7 @@ const state = {
                 for (let entry of entries) {
                     $(this).trigger(`${target}-resized`, entry)
                 }
-            }).observe(targetElement)
+            }.bind(this)).observe(targetElement)
         },
         getWMKS: () => {
             let target = document.querySelector("#vmware-interface")
@@ -602,7 +618,8 @@ const state = {
             }
             return undefined
         },
-        setMargins: () => {
+        setMargins: function () {
+            if (this.wmks._scale < 1) return
             let scaleFactor = this.wmks._scale
             let mainCanvasWidth = this.elements.mainCanvas.width() * scaleFactor
             let screenWidth = this.elements.vmInterface.width()
@@ -671,12 +688,12 @@ const state = {
             let vmName = selected.val()
             let connectUrl = `https://${host}/#/app/range/console/live-action/${urlParts[8]}/${urlParts[9]}/${repetitionGroup}/${key}?vmName=${vmName}`
             window.location.href = connectUrl
-
-            setTimeout(() => {
-                this.elements.vmInterface = $('#vmware-interface')
+            setTimeout(function () {
+                this.wmks = this.utils.getWMKS()
                 this.elements.vmInterface.prependTo('#rework-container')
-
-            }, 1000)
+                this.utils.initResizable()
+                this.utils.resizeVm()
+            }.bind(this), 2000)
         },
         initResizable: function () {
 
@@ -960,12 +977,12 @@ const state = {
         this.menus.linux.on('click', this.events.onOpenTerminal.bind(this, 'linux'))
 
         // Start #mainCanvas Observer
-        this.observers.mainCanvas = this.utils.resizeObserverFactory('#mainCanvas')
-        $(this).on('#mainCanvas-resized', this.utils.resizeVm.bind(this))
+        // this.observers.mainCanvas = this.utils.resizeObserverFactory('#mainCanvas')
+        // $(this).on('#mainCanvas-resized', this.utils.resizeVm.bind(this))
 
         // Start #vmware-interface Observer
-        this.observers.vmInterface = this.utils.resizeObserverFactory('#vmware-interface')
-        $(this).on('#vmware-interface-resized', this.utils.setMargins.bind(this))
+        // this.observers.vmInterface = this.utils.resizeObserverFactory('#vmware-interface')
+        // $(this).on('#vmware-interface-resized', this.utils.setMargins.bind(this))
 
         // Preload vm select
         this.utils.preloadVmSelect()
@@ -1030,7 +1047,53 @@ const state = {
             prompt: this.terminalSettings.terminalPrompts.default,
             outputLimit: 0,
         })
+    },
+    _reset() {
+        setTimeout(function () {
+            this.wmks.utils.getWMKS()
+            this.wmksOptions = new Proxy(this.wmks, {
+                set: (target, property, value) => {
+                    target[property] = value
+                    this.wmks._setOption(property, value)
+                    return true
+                },
+                get: (target, property) => {
+                    return target.options[property]
+                }
+            })
+            // Bind all event functions to this
+            Object.keys(this.events).forEach((key) => {
+                this.events[key] = this.events[key].bind(this)
+            })
 
+            // Bind all util functions to this
+            Object.keys(this.utils).forEach((key) => {
+                this.utils[key] = this.utils[key].bind(this)
+            })
+
+            // add events after static elements are added.
+            this.buttons.newInterface.on('click', this.events.onNewInterface.bind(this))
+            this.buttons.collapse.on('click', this.events.onCollapse.bind(this))
+            this.buttons.expand.on('click', this.events.onExpand.bind(this))
+
+            // bind all termin keymaps and events to this
+            Object.keys(this.terminalSettings.terminalKeymap.keymap).forEach((key) => {
+                this.terminalSettings.terminalKeymap.keymap[key] = this.terminalSettings.terminalKeymap.keymap[key].bind(this)
+            })
+
+            Object.keys(this.terminalSettings.terminalEvents).forEach((key) => {
+                this.terminalSettings.terminalEvents[key] = this.terminalSettings.terminalEvents[key].bind(this)
+            })
+
+            // bind all terminal keymap.keydown to this
+            Object.keys(this.terminalSettings.terminalKeymap).forEach((key) => {
+                if (key != 'keymap') {
+                    this.terminalSettings.terminalKeymap[key] = this.terminalSettings.terminalKeymap[key].bind(this)
+                }
+            })
+            this.utils.initResizable()
+            this.utils.toggleInterface()
+        }.bind(this), 2000)
     }
 }
 
