@@ -420,11 +420,10 @@ const state = {
         terminalEvents: {
             onResize: function (terminal) {
                 try {
-                    // let availSpace = $(window).height() - (this.sizes.vmInterface.height + this.elements.terminalTools.height())
-                    // divide avail space by line terminal line height
-                    // let lines = Math.floor(availSpace / 18)
-                    // terminal.setOption('outputLimit', lines)
-                    // terminal.height(availspace)
+                    let availSpace = $(window).height() - (this.sizes.vmInterface.height + this.elements.terminalTools.height())
+                    let lines = Math.floor(availSpace / 18)
+                    terminal.setOption('outputLimit', lines)
+                    terminal.height(availspace)
                     terminal.scroll_to_bottom()
                 } catch {
                     console.error('Unable to scroll to bottom of terminal.')
@@ -436,20 +435,6 @@ const state = {
                 console.log('keydown: ', e.keyCode)
 
                 this.wmksKeyboard._syncModifiers(e)
-                if ([17].includes(e.keyCode)) {
-                    console.info(`Meta key pressed: ${e.key}`)
-                    if (this.wmksKeyboard.keyDownKeyTimer !== null) {
-                        clearTimeout(this.keyDownKeyTimer)
-                    }
-                    this.wmksKeyboard._handleControlKeys(e.keyCode)
-                } else if (this.wmksKeyboard.pendingKey == 17 && e.key == 'C') {
-                    this.wmksKeyboard.keyDownKeyTimer = setTimeout(function () {
-                        this.wmks.sendInputString('c')
-                        // this.wmksKeyboard.sendKey(e.keyCode, true, false)
-                        this.wmksKeyboard.keyDownKeyTimer = null
-                        this.wmksKeyboard.pendingKey = null
-                    }.bind(this), 0)
-                }
                 if (this.toggles.interactive) {
                     this.wmks._keyboardManager.onKeyDown(e)
                     this.wmks._keyboardManager.onKeyUp(e)
@@ -458,15 +443,29 @@ const state = {
                     } catch {
                         console.error('Unable to find keymap for keydown event.')
                     }
-                } else {
-                    this.wmksKeyboard.pendingKey = e.keyCode
+                    return
+                }
+                if ([17].includes(e.keyCode)) {
+                    console.info(`Meta key pressed: ${e.key}`)
+                    if (this.wmksKeyboard.keyDownKeyTimer !== null) {
+                        clearTimeout(this.keyDownKeyTimer)
+                    }
+                    this.wmksKeyboard._handleControlKeys(e.keyCode)
+
+                } else if (this.wmksKeyboard.pendingKey == 17 && e.key == 'C') {
                     this.wmksKeyboard.keyDownKeyTimer = setTimeout(function () {
+                        this.wmks.sendInputString('c')
+                        // this.wmksKeyboard.sendKey(e.keyCode, true, false)
                         this.wmksKeyboard.keyDownKeyTimer = null
                         this.wmksKeyboard.pendingKey = null
-                    }.bind(this), 500)
+                    }.bind(this), 0)
                 }
 
-
+                this.wmksKeyboard.pendingKey = e.keyCode
+                this.wmksKeyboard.keyDownKeyTimer = setTimeout(function () {
+                    this.wmksKeyboard.keyDownKeyTimer = null
+                    this.wmksKeyboard.pendingKey = null
+                }.bind(this), 500)
             },
             keymap: {
                 ENTER: function (e, original) {
@@ -487,10 +486,9 @@ const state = {
                     if (this.wmksKeyboard.pendingKey == 9) {
                         let command = this.terminal.get_command()
                         command && this.wmks.sendInputString(command)
-                        this.wmksKeyboard.sendKey(9, false, false)
-                        this.wmksKeyboard.sendKey(9, true, false)
-                        this.wmksKeyboard.sendKey(9, false, false)
-                        this.wmksKeyboard.sendKey(9, true, false)
+                        this.terminal.set_command('')
+                        this.utils.sendKeyPress(9)
+                        this.utils.sendKeyPress(9)
                     }
                 },
             },
@@ -506,7 +504,8 @@ const state = {
     },
     elements: {
         get reworkContainer() { return $('#rework-container') },
-        get vmInterface() { return $('#vmware-interface') },
+        // get vmInterface() { return $('#vmware-interface') },
+        get vmInterface() { return $('.interface') },
         get mainCanvas() { return $('#mainCanvas') },
         get terminal() { return $('#terminal') },
         get terminalConsole() { return $('#terminal-console') },
@@ -575,6 +574,18 @@ const state = {
         prevTerminalSize: 0,
     },
     utils: {
+        sendKeyCombo(keys) {
+            keys.forEach((key) => {
+                this.wmksKeyboard.sendKey(key, false, false)
+            })
+            keys.forEach((key) => {
+                this.wmksKeyboard.sendKey(key, true, false)
+            })
+        },
+        sendKeyPress(key) {
+            this.wmksKeyboard.sendKey(key, false, false)
+            this.wmksKeyboard.sendKey(key, true, false)
+        },
         preloadVmSelect: () => {
             let host = window.location.host
             let id = window.location.href.split("/")[8]
@@ -597,7 +608,8 @@ const state = {
 
             if (this.toggles.adjustResolution != this.wmksOptions.adjustResolution) {
                 this.wmksOptions.changeResolution = this.toggles.adjustResolution
-                // this.wmksOptions.rescale = this.toggles.adjustResolution
+                this.wmksOptions.rescale = this.toggles.adjustResolution
+                this.utils.setMargins()
             }
 
         },
@@ -641,7 +653,8 @@ const state = {
             console.log('interface toggle clicked')
             if ($('#content-wrapper').css('display') == 'none') {
                 $('#content-wrapper').show()
-                this.elements.vmInterface.appendTo('.interface>div')
+                // this.elements.vmInterface.appendTo('.interface>div')
+                this.elements.vmInterface.appendTo('#content-wrapper')
                 this.elements.reworkContainer.hide()
                 this.buttons.newInterface.show()
             } else {
@@ -679,7 +692,8 @@ const state = {
         },
         changeVm: function (e) {
             if (this.elements.mainCanvas.length <= 0) return
-            this.elements.vmInterface.remove()
+            //this.elements.vmInterface.remove()
+            this.utils.toggleInterface()
             let host = window.location.host
             let urlParts = window.location.href.split("/")
             let selected = this.selects.vmSelect.find(':selected')
@@ -690,7 +704,8 @@ const state = {
             window.location.href = connectUrl
             setTimeout(function () {
                 this.wmks = this.utils.getWMKS()
-                this.elements.vmInterface.prependTo('#rework-container')
+                // this.elements.vmInterface.prependTo('#rework-container')
+                this.utils.toggleInterface()
                 this.utils.initResizable()
                 this.utils.resizeVm()
             }.bind(this), 2000)
@@ -701,7 +716,7 @@ const state = {
             const dividerHandle = $("<span id='divider-handle' class='resizable-handle'></span>")
             divider.append(dividerHandle)
             this.elements.vmInterface.append(divider)
-            $("#vmware-interface").resizable({
+            this.elements.vmInterface.resizable({
                 handles: {
                     's': "#divider",
                 },
@@ -794,8 +809,7 @@ const state = {
         onOpenTerminal: function (key, e) {
             console.info('Open Terminal clicked')
             this.wmksKeyboard._syncModifiers(e)
-            this.wmksKeyboard.sendKey(91, false, false)
-            this.wmksKeyboard.sendKey(91, true, false)
+            this.utils.sendKeyPress(91)
             switch (key) {
                 case 'windows':
                     setTimeout(() => {
@@ -813,10 +827,7 @@ const state = {
 
         },
         onSendCad: function (e) {
-            let keys = [17, 18, 46]
-            for (let key of keys) {
-                this.wmksKeyboard.sendKey(key, false, false)
-            }
+            this.utils.sendKeyCombo([17, 18, 46])
         },
         onOldInterface: function (e) {
             console.info('Old interface clicked')
@@ -1047,6 +1058,16 @@ const state = {
             prompt: this.terminalSettings.terminalPrompts.default,
             outputLimit: 0,
         })
+
+        // Reconect wmks when VM refreshes
+        let relativePadFunction = WMKS.relativePadManager
+        WMKS.relativePadManager = (e) => {
+            $(window).trigger('notification', { title: 'Interface Interaction', message: 'VM Refreshed' })
+            $(window).trigger('disconnect-refresh')
+            relativePadFunction(e)
+        }
+
+        $(window).on('disconnect-refresh')
     },
     _reset() {
         setTimeout(function () {
