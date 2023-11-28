@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet"
+        href="https://raw.githubusercontent.com/GooberFromHell/CyberTerminal/main/css/font-awesome/font-awesome.css">
+    <link rel="stylesheet" href="https://raw.githubusercontent.com/GooberFromHell/CyberTerminal/main/css/hack/hack.css">
+    <link rel="stylesheet" href="./css/style.css">
+    <title>Document</title>
+</head>
+
+<body x-data="terminal()">
+    <div id="rework-container" x-data="verticalResizer()" x-ref="reworkContainer">
+        <div id="upper-section" x-ref="upperSection">
+        </div>
+
+        <div id="resizer" x-on:mousemove.window="resizeContainer" x-on:mouseup="stopDragging" x-ref="resizerHandle"
+            x-on:mousedown="startDragging">
+        </div>
+
+        <div id="lower-section" x-ref="lowerSection">
+            <div id="terminal">
+                <div x-ref="terminalConsole" id='terminal-console'>
+                </div>
+            </div>
+        </div>
+    </div>
+    <i class="fa fa-cog" x-on:click="toggleTools"></i>
+    <div id="tools-overlay" class="hidden">
+        <dialog x-ref="terminalTools" id="terminal-tools" :class="toolsOpen">
+            <i class="fa fa-close" x-on:click="toggleTools" style="margin-left: auto;"></i>
+            <div id='checkbox-tools'></div>
+            <div id="vm-name"></div>
+            <div id="button-tools"></div>
+            <div id="select-tools"></div>
+        </dialog>
+    </div>
+    <div id="upload-overlay" x-show="$store.uploadDialogOpen">
+        <div id='dropArea'
+            style="color:inherit;border:1px dashed rgba(211, 211, 211, 0.514);background-color:rgba(211, 211, 211, 0.233);">
+            <div style="display: flex; flex-direction: column; justify-content: center; align-items: center;">
+                <i class="fa fa-upload" style="font-size: 50px;"></i>
+                <p>Drop file to upload</p>
+            </div>
+        </div>
+    </div>
+    <div id="notification-wrapper"></div>
+    <script src="js/jquery.js"></script>
+    <script src="js/jquery.terminal.js"></script>
+    <script defer src="js/alpine.js"></script>
+    <script src="index.local.js"></script>
+
+</body>
+
+
+</html>
