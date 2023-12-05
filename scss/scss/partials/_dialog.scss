@@ -1,0 +1,66 @@
+.hiding {
+    animation: fadeOut 0.5s ease forwards !important;
+}
+.hidden {
+    display: none !important;
+}
+
+div.dialog-overlay {
+    position: absolute;
+    z-index: 999;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    display: grid;
+    place-items: center;
+    background-color: rgba(255, 255, 255, 0.25);
+    backdrop-filter: blur(10px);
+    &::backdrop {
+        animation:
+            fadeIn 0.5s ease both,
+            dropIn 0.5s ease both;
+        background: rgb(255 255 255 / 40%);
+        z-index: 2;
+    }
+
+    &.hidden {
+        // &::backdrop {
+        //     animation-delay: 2s !important;
+        //     animation:
+        //         fadeOut 0.5s ease both,
+        //         dropOut 0.5s ease both;
+        // }
+        & > dialog {
+            animation:
+                fadeOut 0.5s ease forwards,
+                dropOut 0.5s ease forwards;
+        }
+    }
+
+    & > dialog {
+        position: absolute !important;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        border: none;
+        color: whitesmoke;
+        box-shadow: $shadow;
+        align-items: center;
+        gap: 10px;
+        width: 600px;
+        height: 600px;
+        border-radius: 5px;
+        background-color: $dark;
+        animation:
+            fadeIn 0.5s ease forwards,
+            dropIn 0.5s ease forwards;
+        padding: $padding;
+        & > .section {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            gap: 15px;
+        }
+    }
+}

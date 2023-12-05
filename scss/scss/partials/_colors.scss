@@ -1,0 +1,21 @@
+// Variables
+$background: #181818;
+$dark: #28292c;
+$current-line: #44475a;
+$selection: #44475a;
+$foreground: #f8f8f2;
+$comment: #6272a4;
+$cyan: #8be9fd;
+$orange: #ffb86c;
+$pink: #ff79c6;
+$purple: #bd93f9;
+$blue: #3498db;
+$green: #2ecc71;
+$red: #e74c3c;
+$yellow: #f1c40f;
+
+// Styles
+body {
+    background-color: $background;
+    color: $foreground;
+}

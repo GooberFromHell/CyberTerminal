@@ -1,0 +1,67 @@
+$slider-height: 20px;
+$slider-width: 50px;
+$slider-padding: 4px;
+$toggle-size: 15px;
+$light: #d8dbe0;
+$slider-color: $background;
+$slider-color-active: $blue;
+$toggle-color: $light;
+$link: rgb(27, 129, 112);
+$link-hover: rgb(24, 94, 82);
+
+.toggle-switch {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+label {
+    position: relative;
+    display: flex;
+    align-items: center;
+    min-width: $slider-width;
+    padding: $slider-padding;
+    background-color: $slider-color;
+    border-radius: $slider-width;
+    cursor: pointer;
+}
+
+input {
+    display: none;
+}
+
+.slider {
+    position: relative;
+    display: flex;
+    align-items: center;
+    width: 100%;
+    padding: 1px 0;
+    border-radius: 50px;
+    transition: 0.3s;
+}
+
+input:checked ~ .slider {
+    background-color: $slider-color-active;
+}
+
+.slider::before {
+    content: '';
+    display: block;
+    position: alsolute;
+    width: $toggle-size;
+    height: $toggle-size;
+    border-radius: 50%;
+    background-color: $toggle-color;
+    transition: 0.3s;
+}
+
+input:checked ~ .slider::before {
+    transform: translateX($slider-width / 2);
+    background-color: $toggle-color;
+    box-shadow: none;
+}
+
+span.toggle-text {
+    text-align: middle;
+}
