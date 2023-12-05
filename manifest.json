@@ -1,0 +1,44 @@
+{
+    "name": "CyberTerminal",
+    "manifest_version": 3,
+    "version": "1.0",
+    "description": "CyberTerminal is an attempt to improve on the PCTE VM interface by providing a new interface with an intigrated terminal.",
+    "permissions": [
+        "scripting",
+        "activeTab",
+        "commands"
+    ],
+    "background": {
+        "service_worker": "background.js"
+    },
+    "content_scripts": [
+        {
+            "matches": [
+                "https://rcs00-portal.pcte.mil/*"
+            ],
+            "include_globs": [
+                "*/#/app/range/console/live-action/*"
+            ],
+            "css": [
+                "css/style.css"
+            ],
+            "js": [
+                "js/jquery.js",
+                "js/jquery.terminal.js",
+                "js/alpine.js",
+                "index.js"
+            ],
+            "run_at": "document_end",
+            "world": "MAIN"
+        }
+    ],
+    "commands": {
+        "Ctrl+M": {
+            "suggested_key": {
+                "default": "Ctrl+R",
+                "mac": "Command+R"
+            },
+            "description": "Reload the extension"
+        }
+    }
+}
